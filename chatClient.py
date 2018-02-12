@@ -18,10 +18,10 @@ def receiving(name, sock):
         finally:
             tlock.release()
 
-host = ''
+host = '127.0.0.1'
 port = 0
 
-server = ('', 5000)  # server IP and port
+server = ('127.0.0.1', 5000)  # server IP and port
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((host, port))
