@@ -34,7 +34,7 @@ alias = input("Name: ")
 message = input(alias + "-> ")
 while message != 'q':
     if message != '':
-        s.sendto(alias + ": " + message, server)
+        s.sendto(bytes((alias + ": " + message), "utf-8"), server)
         tlock.acquire()
         message = input(alias + "-> ")
         tlock.release()
