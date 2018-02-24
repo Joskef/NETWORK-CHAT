@@ -22,10 +22,17 @@ while not quitting:
             quitting = True
         if addr not in clients:
             clients.append(addr)
+        if "pm" not in data:
+            print time.ctime(time.time()) + str(addr) + ": :" + str(data)
+            for client in clients:
+                s.sendto(data, client)
+        else:
 
-        print time.ctime(time.time()) + str(addr) + ": :" + str(data)
-        for client in clients:
-            s.sendto(data, client)
+            dataSplit = data.split("pm")
+            clientIndex = int(dataSplit[0])
+
+            print time.ctime(time.time()) + str(addr) + ": :" + str(data[3:])
+            s.sendto(data[3:], clients[clientIndex])
     except:
         pass
 s.close()

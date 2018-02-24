@@ -12,7 +12,7 @@ def receving(name, sock):
             tlock.acquire()
             while True:
                 data, addr = sock.recvfrom(1024)
-                print(str(data) + " hello")
+                print(str(data))
         except:
             pass
         finally:
@@ -33,9 +33,16 @@ rT.start()
 
 alias = raw_input("Name: ")
 message = raw_input(alias + "-> ")
+pm = raw_input("pm or gm?: ")
+if pm == "pm":
+    whatClient = raw_input("What client number?: ")
+    print (alias + ": " + message)
 while message != 'q':
     if message != '':
-        s.sendto(alias + ": " + message, server)
+        if pm == "pm":
+            s.sendto(whatClient + pm + alias + ": " + message, server)
+        else:
+            s.sendto(alias + ": " + message, server)
     # tlock.acquire()
     message = raw_input()
     # time.sleep(0.2)

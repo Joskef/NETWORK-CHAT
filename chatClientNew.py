@@ -55,45 +55,102 @@ class FriendsList:
         self.usernameMessage = Label(frame, text="Hello " + usernameString + "!")
         self.globalChatBtn = Button(frame, text="Enter Global Chat")
         self.privateChatBtn = Button(frame, text="Chat Selected Friend")
-        self.scrollbar = Scrollbar(frame)
-        self.listbox = Listbox(frame, yscrollcommand=self.scrollbar.set)
+        self.enterPrivateMessageUser = Entry(frame)
+        self.enterPrivateMessageUserLabel = Label(frame, text = "Please enter recipient number: ")
         self.logoutBtn = Button(frame, text="Logout")
         self.addFriendBtn = Button(frame, text="Add Friend")
 
-        self.titleMessage.grid(row=0, columnspan=2)
-        self.usernameMessage.grid(row=1, columnspan=2)
-        self.logoutBtn.grid(row=2, sticky=E + W, columnspan=2)
-        self.scrollbar.grid(row=3, column=1, sticky=N + S)
-        self.listbox.grid(row=3, column=0)
-        self.scrollbar.config(command=self.listbox.yview)
-        self.privateChatBtn.grid(row=4, sticky=E + W, columnspan=2)
-        self.globalChatBtn.grid(row=5, sticky=E + W, columnspan=2)
-        self.addFriendBtn.grid(row=6, sticky=E + W, columnspan=2)
+        self.titleMessage.grid(row=0)
+        self.usernameMessage.grid(row=1)
+        self.logoutBtn.grid(row=2, sticky=E + W)
+        self.enterPrivateMessageUserLabel.grid(row=3, sticky= E+W)
+        self.enterPrivateMessageUser.grid(row=4, sticky=E + W)
+        self.privateChatBtn.grid(row=5, sticky=E + W)
+        self.globalChatBtn.grid(row=6, sticky=E + W)
 
-        print(self.listbox.size())
+        self.clientToChat = None; #null
 
-        def addFriend(event):
-            friendName = raw_input("Enter Friend name: ")
-            print(friendName)
-            self.listbox.insert(END, friendName)
+        print(self.clientToChat)
 
-        def selectFriend(event):
-            if self.listbox.size() == 0:
-                print("There are no friends available!")
-            else:
-                selectedFriend = self.listbox.get(self.listbox.curselection())
-                print(selectedFriend)
-
-
-        self.addFriendBtn.bind("<Button-1>", addFriend)
-        self.listbox.bind("<<ListboxSelect>>", selectFriend)
+        self.privateChatBtn.bind("<Button-1>", self.selectFriendChat)
         self.globalChatBtn.bind("<Button-1>", self.EnterGroupChat)
+
+    def selectFriendChat(self, event):
+        self.clientToChat = self.enterPrivateMessageUser.get()
+        print(self.clientToChat)
+        self.newWindow = Toplevel(self.master)
+        self.client = PrivateChatWindow(self.newWindow, self.usernameString, self.clientToChat)
 
     def EnterGroupChat(self, event):
         tempUserString = 'null'
         tempUserString = self.usernameString
         self.newWindow = Toplevel(self.master)
         self.client = ChatWindow(self.newWindow, tempUserString)
+
+class PrivateChatWindow:
+    def __init__(self, master, usernameString, chatRecipientNum):
+        self.master = master
+        frame = Frame(master)
+        frame.pack()
+        self.alias = usernameString
+        self.chatRecipientNum = chatRecipientNum
+        print("Friend who is being chatted: " + self.chatRecipientNum)
+
+        self.titleMessage = Label(frame, text="Welcome to Private Chat " + usernameString + "!")
+        self.chatBox = Text(frame, height=10)
+        self.textInput = Entry(frame)
+        self.textSubmit = Button(frame, text="Send")
+        self.textSubmit.bind("<Button-1>", self.submitMessage)
+        self.master.bind('<Return>', self.submitMessage)
+        self.logoutBtn = Button(frame, text="Logout and Exit Window")
+        self.logoutBtn.bind("<Button-1>", self.logoutUser)
+
+        self.titleMessage.grid(row=0)
+        self.logoutBtn.grid(row=0, column=1, sticky=W + E)
+        self.chatBox.grid(row=1, columnspan=2)
+        self.textInput.grid(row=2, sticky=W + E)
+        self.textSubmit.grid(row=2, column=1, sticky=E + W)
+
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.s.bind((host, port))
+        self.s.setblocking(0)
+
+        self.rT = threading.Thread(target=self.receving, args=("RecvThread", self.s))
+        self.rT.start()
+
+    def submitMessage(self, event):
+        print("submitMessage function accessed")
+
+    def logoutUser(self, event):
+        self.master.destroy()
+        '''
+            TODO find a way to insert the following code and exit the window
+            shutdown = True
+            rT.join()
+            s.close()
+        '''
+
+    def submitMessage(self, event):
+        print("submitMessage function accessed")
+        message = self.textInput.get()
+        self.s.sendto(self.chatRecipientNum + "pm" + self.alias + ": " + message, server)
+        print(self.alias + ": " + message, server)
+        self.textInput.delete(0, 'end')
+
+    def receving(self, name, sock):
+        print("thread start")
+        while not shutdown:
+            try:
+                tlock.acquire()
+                while True:
+                    data, addr = sock.recvfrom(1024)
+                    print(str(data) + " hi")
+
+                    self.chatBox.insert(INSERT, str(data) + "\n", server)
+            except:
+                pass
+            finally:
+                tlock.release()
 
 class ChatWindow:
     def __init__(self, master, usernameString):
