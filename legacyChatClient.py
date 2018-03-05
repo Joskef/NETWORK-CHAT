@@ -12,7 +12,9 @@ def receving(name, sock):
             tlock.acquire()
             while True:
                 data, addr = sock.recvfrom(1024)
-                print(str(data))
+                if data != "New User Entered!":
+                    print(str(data))
+
         except:
             pass
         finally:
@@ -28,21 +30,25 @@ s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((host, port))
 s.setblocking(0)
 
+alias = raw_input("Name: ")
 rT = threading.Thread(target=receving, args=("RecvThread", s))
 rT.start()
 
-alias = raw_input("Name: ")
-message = raw_input(alias + "-> ")
+#message = raw_input(alias + "-> ")
+message = "New User Entered!"
 pm = raw_input("pm or gm?: ")
 if pm == "pm":
     whatClient = raw_input("What client number?: ")
-    print (alias + ": " + message)
+    #print (alias + ": " + message)
 while message != 'q':
     if message != '':
-        if pm == "pm":
-            s.sendto(whatClient + pm + alias + ": " + message, server)
+        if message == "New User Entered!":
+            s.sendto(message, server)
         else:
-            s.sendto(alias + ": " + message, server)
+            if pm == "pm":
+                s.sendto(whatClient + pm + alias + ": " + message, server)
+            else:
+                s.sendto(alias + ": " + message, server)
     # tlock.acquire()
     message = raw_input()
     # time.sleep(0.2)

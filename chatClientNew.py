@@ -144,7 +144,8 @@ class PrivateChatWindow:
                 tlock.acquire()
                 while True:
                     data, addr = sock.recvfrom(1024)
-                    print(str(data) + " hi")
+                    if data != "New User Entered!":
+                        print(str(data))
 
                     self.chatBox.insert(INSERT, str(data) + "\n", server)
             except:
@@ -157,7 +158,9 @@ class ChatWindow:
         self.master = master
         frame = Frame(master)
         frame.pack()
+        entered = 0
         self.alias = usernameString
+
 
         self.titleMessage = Label(frame, text="Welcome to Global Chat " + usernameString + "!")
         self.chatBox = Text(frame, height=10)
@@ -168,11 +171,14 @@ class ChatWindow:
         self.logoutBtn = Button(frame, text= "Logout and Exit Window")
         self.logoutBtn.bind("<Button-1>", self.logoutUser)
 
+
+
         self.titleMessage.grid(row=0)
         self.logoutBtn.grid(row=0, column=1, sticky = W + E)
         self.chatBox.grid(row=1, columnspan=2)
         self.textInput.grid(row=2, sticky=W + E)
         self.textSubmit.grid(row=2, column=1, sticky=E + W)
+
 
         self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.s.bind((host, port))
@@ -180,17 +186,24 @@ class ChatWindow:
 
         self.rT = threading.Thread(target=self.receving, args=("RecvThread", self.s))
         self.rT.start()
+        #self.rT.join()
 
-        print(self.alias)
+        #TODO send message when chat window opens
+
+        self.s.sendto(self.alias + " has joined the group chat!", server)
+
+
+    def userEnteredMessage(self, event):
+        print("userEnteredMessage function accessed")
+        message = "has joined the group chat!"
+        self.s.sendto(self.alias + ": " + message, server)
+        print(self.alias + ": " + message, server)
+        self.textInput.delete(0, 'end')
+
 
     def logoutUser(self, event):
+        self.s.close()
         self.master.destroy()
-        '''
-            TODO find a way to insert the following code and exit the window
-            shutdown = True
-            rT.join()
-            s.close()
-        '''
 
     def submitMessage(self, event):
         print("submitMessage function accessed")
@@ -206,7 +219,8 @@ class ChatWindow:
                 tlock.acquire()
                 while True:
                     data, addr = sock.recvfrom(1024)
-                    print(str(data) + " hi")
+                    if data != "New User Entered!":
+                        print(str(data))
 
                     self.chatBox.insert(INSERT, str(data) + "\n", server)
             except:
