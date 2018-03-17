@@ -59,14 +59,19 @@ class FriendsList:
         self.enterPrivateMessageUserLabel = Label(frame, text = "Please enter recipient number: ")
         self.logoutBtn = Button(frame, text="Logout")
         self.addFriendBtn = Button(frame, text="Add Friend")
+        self.scrollbarFriends = Scrollbar(frame)
+        self.listboxFriends = Listbox(frame, yscrollcommand=self.scrollbarFriends.set)
 
-        self.titleMessage.grid(row=0)
-        self.usernameMessage.grid(row=1)
-        self.logoutBtn.grid(row=2, sticky=E + W)
-        self.enterPrivateMessageUserLabel.grid(row=3, sticky= E+W)
-        self.enterPrivateMessageUser.grid(row=4, sticky=E + W)
-        self.privateChatBtn.grid(row=5, sticky=E + W)
-        self.globalChatBtn.grid(row=6, sticky=E + W)
+        self.titleMessage.grid(row=0, columnspan = 2)
+        self.usernameMessage.grid(row=1, columnspan = 2)
+        self.logoutBtn.grid(row=2, sticky=E + W, columnspan = 2)
+        self.enterPrivateMessageUserLabel.grid(row=3, sticky= E+W, columnspan = 2)
+        self.enterPrivateMessageUser.grid(row=4, sticky=E + W, columnspan = 2)
+        self.scrollbarFriends.grid(row=5, column=1, sticky=N + S + E + W)
+        self.listboxFriends.grid(row=5, column=0, sticky=N + S + E + W)
+        self.scrollbarFriends.config(command=self.listboxFriends.yview)
+        self.privateChatBtn.grid(row=6, sticky=E + W, columnspan = 2)
+        self.globalChatBtn.grid(row=7, sticky=E + W, columnspan = 2)
 
         self.clientToChat = None; #null
 

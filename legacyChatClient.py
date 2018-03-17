@@ -12,7 +12,7 @@ def receving(name, sock):
             tlock.acquire()
             while True:
                 data, addr = sock.recvfrom(1024)
-                if data != "New User Entered!":
+                if "New User Entered!" not in data:
                     print(str(data))
 
         except:
@@ -43,7 +43,7 @@ if pm == "pm":
 while message != 'q':
     if message != '':
         if message == "New User Entered!":
-            s.sendto(message, server)
+            s.sendto(alias +", " +message, server)
         else:
             if pm == "pm":
                 s.sendto(whatClient + pm + alias + ": " + message, server)

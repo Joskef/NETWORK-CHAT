@@ -7,6 +7,7 @@ host = '127.0.0.1'
 port = 5002
 
 clients = []
+clientNames = []
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((host, port))
@@ -22,6 +23,7 @@ while not quitting:
             quitting = True
         if addr not in clients:
             clients.append(addr)
+            clientNames.append((data.split(","))[0])
         if "pm" not in data:
             print time.ctime(time.time()) + str(addr) + ": :" + str(data)
             for client in clients:
