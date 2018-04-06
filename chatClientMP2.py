@@ -70,6 +70,15 @@ class MainWindow:
         self.createGroupChatBtn = Button(frame, text="Create Group Chat")
         self.enterGlobalChatBtn = Button(frame, text="Enter Global Chat Mode")
         self.enterPrivateChatBtn = Button(frame, text="Enter Private Chat Mode")
+        self.enterFileTransferBtn = Button(frame, text="Enter File Transfer Mode")
+
+
+        self.fileSendLabel = Label(frame, text="Enter File to Upload")
+        self.fileDownloadLabel = Label(frame, text="Enter File to Download")
+        self.fileSendInput = Entry(frame)
+        self.fileDownloadInput = Entry(frame)
+        self.fileSendBtn = Button(frame, text="Upload")
+        self.fileDownloadBtn = Button(frame, text="Download")
 
         # For Users list
         self.scrollbarUsers = Scrollbar(frame)
@@ -86,28 +95,44 @@ class MainWindow:
         self.listboxChatrooms.grid(row=3, column=0)
         self.scrollbarChatrooms.grid(row=3, column=1, sticky=N + S)
         self.welcomeUserMessage.grid(row=0, column=3)
-        self.chatBox.grid(row=1, column=3, rowspan=6, columnspan=2, sticky=N + S)
-        self.chatInput.grid(row=7, column=3, rowspan=2, sticky=N + S + W + E)
-        self.chatSubmitBtn.grid(row=7, column=4, rowspan=2, sticky=N + S + W + E)
+        self.chatBox.grid(row=1, column=3, rowspan=6, columnspan=3, sticky=N + S)
+        self.chatInput.grid(row=7, columnspan=2, column= 3, rowspan=2, sticky=N + S + W + E)
+        self.chatSubmitBtn.grid(row=7, column=5, rowspan=2, sticky=N + S + W + E)
         self.createChatRoomBtn.grid(row=5, columnspan=2, sticky=W + E)
         self.createGroupChatBtn.grid(row=6, columnspan=2, sticky=W + E)
         self.logoutBtn.grid(row=0, column=4, sticky=E)
         self.enterPrivateChatBtn.grid(row=7, columnspan=2, sticky=W +E)
         self.enterGlobalChatBtn.grid(row=8, columnspan=2, sticky=W + E)
+        #self.enterFileTransferBtn.grid(row=9, columnspan=2, sticky=W + E)
+
+        # For File Transfer Mode
+
+        self.fileSendLabel.grid(row=9, column=3, sticky=W + E)
+        self.fileSendInput.grid(row=9, column=4, sticky=W + E)
+        self.fileSendBtn.grid(row=9, column=5, sticky=W + E)
+        self.fileDownloadLabel.grid(row=10, column=3, sticky=W + E)
+        self.fileDownloadInput.grid(row=10, column=4, sticky=W + E)
+        self.fileDownloadBtn.grid(row=10, column=5, sticky=W + E)
+
 
         # config and binds
         # self.chatBox.config(state = DISABLED)
         self.master.bind('<Return>', self.submitMessageGlobalChat)
         self.chatSubmitBtn.bind('<Button-1>', self.submitMessageGlobalChat)
-        self.listboxUsers.bind("<<ListboxSelect>>", self.chatPrivateUser);
+        self.listboxUsers.bind("<<ListboxSelect>>", self.chatPrivateUser)
         self.enterPrivateChatBtn.config(state=DISABLED)
         self.enterGlobalChatBtn.bind('<Button-1>', self.initGlobalChatMode)
+        self.fileDownloadBtn.bind('<Button-1>', self.downloadFromFileServer)
 
 
         # server stuff
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #group and private chat
         self.s.bind((host, port))
         self.s.setblocking(0)
+
+        self.skClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #fileTransfer
+        self.skClient.connect(("127.0.0.1", 2525))
+        self.sData = "Temp"
 
         self.rT = threading.Thread(target=self.receiving, args=("RecvThread", self.s))
         self.rT.start()
@@ -133,6 +158,19 @@ class MainWindow:
         self.chatRecipientNum = self.listboxUsers.curselection()[0] # get selected User's index in then convert to int
         self.welcomeUserMessage.configure(text = "You are chatting with " + str(self.chatRecipientNum))
         print(self.chatRecipientNum)
+
+    def downloadFromFileServer(self, event):
+        self.sFileName = self.fileDownloadInput.get()
+        print(self.sFileName)
+        while True:
+            self.skClient.send(self.sFileName)
+            sData = self.skClient.recv(1024)
+            fDownloadFile = open('new_' + self.sFileName, "wb")
+            while sData:
+                fDownloadFile.write(sData)
+                sData = self.skClient.recv(1024)
+            print "Download Completed"
+            break
 
     def submitMessagePrivateChat(self, event):
         print("submitMessagePrivatChat function accessed")

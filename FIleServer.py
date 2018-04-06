@@ -8,7 +8,7 @@ host = ''
 skServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 skServer.bind((host, 2525))
 skServer.listen(10)  # listens for 10 clients
-sourceDir = "C:\Users\Dante\PycharmProjects\FileTransfer/"  # where the files will be taken from and are placed in
+sourceDir = "/media/karl/Local Disk/MPNetworkFileTransferTest/"  # where the files will be taken from and are placed in
 print "Server Active"
 bFileFound = 0
 
