@@ -348,7 +348,7 @@ class MainWindow:
         self.messageType = "gm"
         print("submitMessageGlobalChat function accessed")
         message = self.chatInput.get()
-        self.s.sendto(self.usernameString + ": " + message, server)
+        self.s.sendto("gm" + self.usernameString + ": " + message, server)
         print(self.usernameString + ": " + message, server)
         self.chatInput.delete(0, 'end')
 
