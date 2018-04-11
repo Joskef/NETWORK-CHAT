@@ -56,6 +56,7 @@ class MainWindow:
         frame.pack()
         self.usernameString = usernameString
         self.chatRecipientNum = 0;
+        self.chatRoomID = 0;
 
         # GUI initialization
 
@@ -66,7 +67,9 @@ class MainWindow:
         self.chatInput = Entry(frame)
         self.chatSubmitBtn = Button(frame, text="Send")
         self.logoutBtn = Button(frame, text="Logout")
-        self.createChatRoomBtn = Button(frame, text="Create Chat Room")
+        self.createChatRoomBtn = Button(frame, text="Join Chat Room 1")
+        self.createChatRoom2Btn = Button(frame, text="Join Chat Room 2")
+        self.createChatRoom3Btn = Button(frame, text="Join Chat Room 3")
         self.createGroupChatBtn = Button(frame, text="Create Group Chat")
         self.enterGlobalChatBtn = Button(frame, text="Enter Global Chat Mode")
         self.enterPrivateChatBtn = Button(frame, text="Enter Private Chat Mode")
@@ -80,29 +83,31 @@ class MainWindow:
         self.fileSendBtn = Button(frame, text="Upload")
         self.fileDownloadBtn = Button(frame, text="Download")
 
+        self.chatRoomPasswordLabel = Label(frame, text = "Enter Chatroom Password")
+        self.chatRoomPasswordInput = Entry(frame)
+        self.chatRoomPasswordBtn = Button(frame, text = "Submit")
+        self.chatRoomPasswordFeedback = Label(frame)
+
         # For Users list
         self.scrollbarUsers = Scrollbar(frame)
         self.listboxUsers = Listbox(frame, yscrollcommand=self.scrollbarUsers.set)
 
-        # For Chatrooms list
-        self.scrollbarChatrooms = Scrollbar(frame)
-        self.listboxChatrooms = Listbox(frame, yscrollcommand=self.scrollbarChatrooms.set)
 
         self.userListTitle.grid(row=0, column=0, columnspan=2)
         self.listboxUsers.grid(row=1, column=0)
         self.scrollbarUsers.grid(row=1, column=1, sticky=N + S)
         self.chatroomTitle.grid(row=2, column=0, columnspan=2)
-        self.listboxChatrooms.grid(row=3, column=0)
-        self.scrollbarChatrooms.grid(row=3, column=1, sticky=N + S)
         self.welcomeUserMessage.grid(row=0, column=3)
         self.chatBox.grid(row=1, column=3, rowspan=6, columnspan=3, sticky=N + S)
         self.chatInput.grid(row=7, columnspan=2, column= 3, rowspan=2, sticky=N + S + W + E)
         self.chatSubmitBtn.grid(row=7, column=5, rowspan=2, sticky=N + S + W + E)
         self.createChatRoomBtn.grid(row=5, columnspan=2, sticky=W + E)
-        self.createGroupChatBtn.grid(row=6, columnspan=2, sticky=W + E)
-        self.logoutBtn.grid(row=0, column=4, sticky=E)
-        self.enterPrivateChatBtn.grid(row=7, columnspan=2, sticky=W +E)
-        self.enterGlobalChatBtn.grid(row=8, columnspan=2, sticky=W + E)
+        self.createChatRoom2Btn.grid(row=6, columnspan=2, sticky=W + E)
+        self.createChatRoom3Btn.grid(row=7, columnspan=2, sticky=W + E)
+        self.createGroupChatBtn.grid(row=8, columnspan=2, sticky=W + E)
+        self.logoutBtn.grid(row=0, column=5, sticky=E)
+        self.enterPrivateChatBtn.grid(row=9, columnspan=2, sticky=W +E)
+        self.enterGlobalChatBtn.grid(row=10, columnspan=2, sticky=W + E)
         #self.enterFileTransferBtn.grid(row=9, columnspan=2, sticky=W + E)
 
         # For File Transfer Mode
@@ -114,6 +119,13 @@ class MainWindow:
         self.fileDownloadInput.grid(row=10, column=4, sticky=W + E)
         self.fileDownloadBtn.grid(row=10, column=5, sticky=W + E)
 
+        # For Chat Room Mode
+
+        self.chatRoomPasswordLabel.grid(row=11, column=3, sticky=W + E)
+        self.chatRoomPasswordInput.grid(row=11, column=4, sticky=W + E)
+        self.chatRoomPasswordBtn.grid(row=11, column=5, sticky=W + E)
+        self.chatRoomPasswordFeedback.grid(row=12, column=3, columnspan=3, sticky=W + E)
+
 
         # config and binds
         # self.chatBox.config(state = DISABLED)
@@ -122,7 +134,22 @@ class MainWindow:
         self.listboxUsers.bind("<<ListboxSelect>>", self.chatPrivateUser)
         self.enterPrivateChatBtn.config(state=DISABLED)
         self.enterGlobalChatBtn.bind('<Button-1>', self.initGlobalChatMode)
+        self.createGroupChatBtn.bind('<Button-1>', self.initGroupChatMode)
         self.fileDownloadBtn.bind('<Button-1>', self.downloadFromFileServer)
+        self.createChatRoomBtn.bind('<Button-1>', self.initChatRoomMode1)
+        self.createChatRoom2Btn.bind('<Button-1>', self.initChatRoomMode2)
+        self.createChatRoom3Btn.bind('<Button-1>', self.initChatRoomMode3)
+
+        self.chatRoomPasswordLabel.config(state=DISABLED)
+        self.chatRoomPasswordInput.config(state=DISABLED)
+        self.chatRoomPasswordBtn.config(state=DISABLED)
+        self.chatRoomPasswordFeedback.config(state=DISABLED)
+
+        self.chatRoomPasswordBtn.bind('<Button-1>', self.joinChatRoom)
+
+        self.clientNumber = self.getClientNumber();
+
+
 
 
         # server stuff
@@ -152,11 +179,98 @@ class MainWindow:
         self.chatSubmitBtn.bind('<Button-1>', self.submitMessageGlobalChat)
         self.master.bind('<Return>', self.submitMessageGlobalChat)
 
+    def initGlobalChatModeNonEvent(self):
+        self.chatBox.delete(1.0, END)  # clear text area
+        self.chatBox.insert(INSERT, "Welcome to Global Chat Mode!\n")
+        self.chatSubmitBtn.bind('<Button-1>', self.submitMessageGlobalChat)
+        self.master.bind('<Return>', self.submitMessageGlobalChat)
+
+    def initGroupChatMode(self, event):
+        self.addToGroupChat(self.clientNumber)  # join group chat
+        #self.chatBox.delete(1.0, END)  # clear text area
+        self.chatBox.insert(INSERT, "Welcome to Group Chat Mode!\n")
+        self.chatSubmitBtn.bind('<Button-1>', self.submitMessageGroupChat)
+        self.master.bind('<Return>', self.submitMessageGroupChat)
+
+    def initChatRoomMode1(self, event):
+        self.chatRoomID = 1
+        self.addToPrivateChat(self.clientNumber)  # join chat room chat
+        self.chatBox.delete(1.0, END)  # clear text area
+        self.chatBox.insert(INSERT, "Please Enter Password for Chat Room 1\n")
+        self.chatRoomPasswordLabel.config(state=NORMAL)
+        self.chatRoomPasswordInput.config(state=NORMAL)
+        self.chatRoomPasswordBtn.config(state=NORMAL)
+        self.chatRoomPasswordFeedback.config(state=NORMAL, text="Please Enter Chatroom Password")
+
+
+    def initChatRoomMode2(self, event):
+        self.chatRoomID = 2
+        self.addToPrivateChat2(self.clientNumber)  # join chat room chat
+        self.chatBox.delete(1.0, END)  # clear text area
+        self.chatBox.insert(INSERT, "Please Enter Password for Chat Room 2\n")
+        self.chatRoomPasswordLabel.config(state=NORMAL)
+        self.chatRoomPasswordInput.config(state=NORMAL)
+        self.chatRoomPasswordBtn.config(state=NORMAL)
+        self.chatRoomPasswordFeedback.config(state=NORMAL, text="Please Enter Chatroom Password")
+
+
+    def initChatRoomMode3(self, event):
+        self.chatRoomID = 3
+        self.addToPrivateChat3(self.clientNumber)  # join chat room chat
+        self.chatBox.delete(1.0, END)  # clear text area
+        self.chatBox.insert(INSERT, "Please Enter Password for Chat Room 3\n")
+        self.chatRoomPasswordLabel.config(state=NORMAL)
+        self.chatRoomPasswordInput.config(state=NORMAL)
+        self.chatRoomPasswordBtn.config(state=NORMAL)
+        self.chatRoomPasswordFeedback.config(state=NORMAL, text="Please Enter Chatroom Password", fg = "black")
+
+
+    def joinChatRoom(self, event):
+        if(self.chatRoomID == 1):
+            if(self.chatRoomPasswordInput.get() == "pc1"):
+                self.chatRoomPasswordFeedback.config(text="Private Chat 1 Accessed!", fg = "dark green")
+                self.beginChatRoomMode()
+            else:
+                self.chatRoomPasswordFeedback.config(text="Invalid Password. Unauthorized Private Chat 1 Access! Returning to Global Chat.", fg="red")
+                self.initGlobalChatModeNonEvent()
+        elif(self.chatRoomID == 2):
+            if (self.chatRoomPasswordInput.get() == "pc2"):
+                self.chatRoomPasswordFeedback.config(text="Private Chat 2 Accessed!", fg="dark green")
+                self.beginChatRoomMode2()
+            else:
+                self.chatRoomPasswordFeedback.config(text="Invalid Password. Unauthorized Private Chat 2 Access! Returning to Global Chat.", fg="red")
+                self.initGlobalChatModeNonEvent()
+        elif (self.chatRoomID == 3):
+            if (self.chatRoomPasswordInput.get() == "pc3"):
+                self.chatRoomPasswordFeedback.config(text="Private Chat 3 Accessed!", fg="dark green")
+                self.beginChatRoomMode3()
+            else:
+                self.chatRoomPasswordFeedback.config(text="Invalid Password. Unauthorized Private Chat 3 Access! Returning to Global Chat.", fg="red")
+                self.initGlobalChatModeNonEvent()
+
+    def beginChatRoomMode(self):
+        self.chatBox.delete(1.0, END)  # clear text area
+        self.chatBox.insert(INSERT, "Welcome to Chat Room 1!\n")
+        self.chatSubmitBtn.bind('<Button-1>', self.submitMessageChatRoom)
+        self.master.bind('<Return>', self.submitMessageChatRoom)
+
+    def beginChatRoomMode2(self):
+        self.chatBox.delete(1.0, END)  # clear text area
+        self.chatBox.insert(INSERT, "Welcome to Chat Room 2!\n")
+        self.chatSubmitBtn.bind('<Button-1>', self.submitMessageChatRoom2)
+        self.master.bind('<Return>', self.submitMessageChatRoom2)
+
+    def beginChatRoomMode3(self):
+        self.chatBox.delete(1.0, END)  # clear text area
+        self.chatBox.insert(INSERT, "Welcome to Chat Room 3!\n")
+        self.chatSubmitBtn.bind('<Button-1>', self.submitMessageChatRoom3)
+        self.master.bind('<Return>', self.submitMessageChatRoom3)
+
     def chatPrivateUser(self, event):
         self.enterPrivateChatBtn.config(state=NORMAL)
         self.enterPrivateChatBtn.bind("<Button-1>", self.initPrivateChatMode)
         self.chatRecipientNum = self.listboxUsers.curselection()[0] # get selected User's index in then convert to int
-        self.welcomeUserMessage.configure(text = "You are chatting with " + str(self.chatRecipientNum))
+        self.chatBox.insert(INSERT, "You are chatting with " + str(self.chatRecipientNum) + "\n")
         print(self.chatRecipientNum)
 
     def downloadFromFileServer(self, event):
@@ -171,6 +285,38 @@ class MainWindow:
                 sData = self.skClient.recv(1024)
             print "Download Completed"
             break
+
+    def submitMessageChatRoom(self, event):
+        print("submitMessageChatRoom function accessed")
+        message = self.chatInput.get()
+        #self.chatBox.insert(INSERT, self.usernameString + ": " + message +"\n")
+        self.s.sendto("pc" + self.usernameString + ": " + message, server)
+        print(self.usernameString + ": " + message, server)
+        self.chatInput.delete(0, 'end')
+
+    def submitMessageChatRoom2(self, event):
+        print("submitMessageChatRoom function accessed")
+        message = self.chatInput.get()
+        #self.chatBox.insert(INSERT, self.usernameString + ": " + message +"\n")
+        self.s.sendto("pc2" + self.usernameString + ": " + message, server)
+        print(self.usernameString + ": " + message, server)
+        self.chatInput.delete(0, 'end')
+
+    def submitMessageChatRoom3(self, event):
+        print("submitMessageChatRoom function accessed")
+        message = self.chatInput.get()
+        #self.chatBox.insert(INSERT, self.usernameString + ": " + message +"\n")
+        self.s.sendto("pc3" + self.usernameString + ": " + message, server)
+        print(self.usernameString + ": " + message, server)
+        self.chatInput.delete(0, 'end')
+
+    def submitMessageGroupChat(self, event):
+        print("submitMessageGroupChat function accessed")
+        message = self.chatInput.get()
+        #self.chatBox.insert(INSERT, self.usernameString + ": " + message + "\n")
+        self.s.sendto("gc" + self.usernameString + ": " + message, server)
+        print(self.usernameString + ": " + message, server)
+        self.chatInput.delete(0, 'end')
 
     def submitMessagePrivateChat(self, event):
         print("submitMessagePrivatChat function accessed")
@@ -187,6 +333,41 @@ class MainWindow:
         print(self.usernameString + ": " + message, server)
         self.chatInput.delete(0, 'end')
 
+    def addToGroupChat(self, clientIndex):
+        print("self.addToGroupChat accessed")
+        gcFileWrite = open("gc.csv", "a+")
+        member = str(clientIndex) + "\n"
+        gcFileWrite.write(member)
+        gcFileWrite.close()
+
+    def addToPrivateChat(self, clientIndex):
+        pcFileWrite = open("pc.csv", "a+")
+        member = str(clientIndex) + "\n"
+        pcFileWrite.write(member)
+        pcFileWrite.close()
+
+    def addToPrivateChat2(self, clientIndex):
+
+        pcFileWrite = open("pc2.csv", "a+")
+        member = str(clientIndex) + "\n"
+        pcFileWrite.write(member)
+        pcFileWrite.close()
+
+    def addToPrivateChat3(self, clientIndex):
+
+        pcFileWrite = open("pc3.csv", "a+")
+        member = str(clientIndex) + "\n"
+        pcFileWrite.write(member)
+        pcFileWrite.close()
+
+    def getClientNumber(self):
+        print("self.getClientNumber accessed")
+        with open('info.csv') as fp:
+            lines = fp.readlines()
+            clientNumber = len(lines)
+            print("getClientNumber returns " + str(clientNumber))
+            return clientNumber
+
     def receiving(self, name, sock):
         print("thread start")
         while not shutdown:
@@ -196,8 +377,8 @@ class MainWindow:
                     data, addr = sock.recvfrom(1024)
                     if "New User Entered!" not in data:
                         print(str(data))
+                        self.chatBox.insert(INSERT, str(data) + "\n", server)
 
-                    self.chatBox.insert(INSERT, str(data) + "\n", server)
                     client_names = f.readlines()
                     print "Client Names: \n"
                     for clientName in client_names:
