@@ -8,6 +8,8 @@ tlock = threading.Lock()
 shutdown = False
 
 
+
+
 def receving(name, sock):
     while not shutdown:
         try:
@@ -16,8 +18,15 @@ def receving(name, sock):
 
                 data, addr = sock.recvfrom(1024)
 
-                if "New User Entered!" not in data:
+                if "gm" in data and "New User Entered!" not in data:
+                    if messageType == "gm":
+                        print(str(data[2:]))
+
+                elif "New User Entered!" not in data:
                     print(str(data))
+
+
+
 
         except:
             pass
@@ -129,7 +138,11 @@ while message != 'q':
             if messageType == "pm":
                 s.sendto(whatClient + messageType + alias + ": " + message, server)
             elif messageType == "gc":
-                s.sendto(messageType + alias + ": " + message, server)
+                if "inv" in message:
+                    index = raw_input("Who would you like to invite?:  ")
+                    addToGroupChat(index)
+                else:
+                    s.sendto(messageType + alias + ": " + message, server)
             elif "pc" in messageType:
                 s.sendto(messageType + alias + ": " + message, server)
             else:

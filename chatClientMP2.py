@@ -57,10 +57,13 @@ class MainWindow:
         self.usernameString = usernameString
         self.chatRecipientNum = 0;
         self.chatRoomID = 0;
+        self.shutdown = False
+        self.clientNumber = self.getClientNumber();
+        self.messageType = "gm"
 
         # GUI initialization
 
-        self.welcomeUserMessage = Label(frame, text="Welcome " + self.usernameString + "!")
+        self.welcomeUserMessage = Label(frame, text="Welcome " + str(self.clientNumber) + " "+ self.usernameString + "!")
         self.userListTitle = Label(frame, text="Online Users")
         self.chatroomTitle = Label(frame, text="Chat Rooms")
         self.chatBox = Text(frame, height=10)
@@ -70,11 +73,11 @@ class MainWindow:
         self.createChatRoomBtn = Button(frame, text="Join Chat Room 1")
         self.createChatRoom2Btn = Button(frame, text="Join Chat Room 2")
         self.createChatRoom3Btn = Button(frame, text="Join Chat Room 3")
-        self.createGroupChatBtn = Button(frame, text="Create Group Chat")
+        self.createGroupChatBtn = Button(frame, text="Invite to Group Chat")
         self.enterGlobalChatBtn = Button(frame, text="Enter Global Chat Mode")
         self.enterPrivateChatBtn = Button(frame, text="Enter Private Chat Mode")
         self.enterFileTransferBtn = Button(frame, text="Enter File Transfer Mode")
-
+        self.createGroupChatInput = Entry(frame)
 
         self.fileSendLabel = Label(frame, text="Enter File to Upload")
         self.fileDownloadLabel = Label(frame, text="Enter File to Download")
@@ -104,10 +107,11 @@ class MainWindow:
         self.createChatRoomBtn.grid(row=5, columnspan=2, sticky=W + E)
         self.createChatRoom2Btn.grid(row=6, columnspan=2, sticky=W + E)
         self.createChatRoom3Btn.grid(row=7, columnspan=2, sticky=W + E)
-        self.createGroupChatBtn.grid(row=8, columnspan=2, sticky=W + E)
         self.logoutBtn.grid(row=0, column=5, sticky=E)
         self.enterPrivateChatBtn.grid(row=9, columnspan=2, sticky=W +E)
         self.enterGlobalChatBtn.grid(row=10, columnspan=2, sticky=W + E)
+        self.createGroupChatInput.grid(row=11, columnspan=2, sticky=W + E)
+        self.createGroupChatBtn.grid(row=12, columnspan=2, sticky=W + E)
         #self.enterFileTransferBtn.grid(row=9, columnspan=2, sticky=W + E)
 
         # For File Transfer Mode
@@ -147,7 +151,7 @@ class MainWindow:
 
         self.chatRoomPasswordBtn.bind('<Button-1>', self.joinChatRoom)
 
-        self.clientNumber = self.getClientNumber();
+
 
 
 
@@ -166,6 +170,14 @@ class MainWindow:
 
         self.s.sendto(self.usernameString, server)
         self.s.sendto("has joined the Global Chat!", server)
+
+
+        self.logoutBtn.bind('<Button-1>', self.submitLogout)
+
+    def submitLogout(self, event):
+        self.shutdown = True
+        self.rT.join()
+        self.s.close()
 
     def initPrivateChatMode(self, event):
         self.chatBox.delete(1.0, END) #clear text area
@@ -186,7 +198,8 @@ class MainWindow:
         self.master.bind('<Return>', self.submitMessageGlobalChat)
 
     def initGroupChatMode(self, event):
-        self.addToGroupChat(self.clientNumber)  # join group chat
+        print("createGroupChatInput = " + str(self.createGroupChatInput.get()))
+        self.addToGroupChat(self.createGroupChatInput.get())  # invite client num to group chat
         #self.chatBox.delete(1.0, END)  # clear text area
         self.chatBox.insert(INSERT, "Welcome to Group Chat Mode!\n")
         self.chatSubmitBtn.bind('<Button-1>', self.submitMessageGroupChat)
@@ -287,6 +300,7 @@ class MainWindow:
             break
 
     def submitMessageChatRoom(self, event):
+        self.messageType = "pc"
         print("submitMessageChatRoom function accessed")
         message = self.chatInput.get()
         #self.chatBox.insert(INSERT, self.usernameString + ": " + message +"\n")
@@ -295,6 +309,7 @@ class MainWindow:
         self.chatInput.delete(0, 'end')
 
     def submitMessageChatRoom2(self, event):
+        self.messageType = "pc2"
         print("submitMessageChatRoom function accessed")
         message = self.chatInput.get()
         #self.chatBox.insert(INSERT, self.usernameString + ": " + message +"\n")
@@ -303,6 +318,7 @@ class MainWindow:
         self.chatInput.delete(0, 'end')
 
     def submitMessageChatRoom3(self, event):
+        self.messageType = "pc3"
         print("submitMessageChatRoom function accessed")
         message = self.chatInput.get()
         #self.chatBox.insert(INSERT, self.usernameString + ": " + message +"\n")
@@ -311,6 +327,7 @@ class MainWindow:
         self.chatInput.delete(0, 'end')
 
     def submitMessageGroupChat(self, event):
+        self.messageType = "gc"
         print("submitMessageGroupChat function accessed")
         message = self.chatInput.get()
         #self.chatBox.insert(INSERT, self.usernameString + ": " + message + "\n")
@@ -319,6 +336,7 @@ class MainWindow:
         self.chatInput.delete(0, 'end')
 
     def submitMessagePrivateChat(self, event):
+        self.messageType = "pm"
         print("submitMessagePrivatChat function accessed")
         message = self.chatInput.get()
         self.chatBox.insert(INSERT, self.usernameString + ": " + message +"\n")
@@ -327,6 +345,7 @@ class MainWindow:
         self.chatInput.delete(0, 'end')
 
     def submitMessageGlobalChat(self, event):
+        self.messageType = "gm"
         print("submitMessageGlobalChat function accessed")
         message = self.chatInput.get()
         self.s.sendto(self.usernameString + ": " + message, server)
@@ -370,12 +389,18 @@ class MainWindow:
 
     def receiving(self, name, sock):
         print("thread start")
-        while not shutdown:
+        while not shutdown or self.shutdown:
             try:
                 tlock.acquire()
                 while True:
                     data, addr = sock.recvfrom(1024)
-                    if "New User Entered!" not in data:
+
+                    if "gm" in data and "New User Entered!" not in data:
+                        if self.messageType == "gm":
+                            print(str(data[2:]))
+                            self.chatBox.insert(INSERT, str(data[2:]) + "\n", server)
+
+                    elif "New User Entered!" not in data:
                         print(str(data))
                         self.chatBox.insert(INSERT, str(data) + "\n", server)
 
@@ -383,7 +408,7 @@ class MainWindow:
                     print "Client Names: \n"
                     for clientName in client_names:
                         print(clientName)
-                        self.listboxUsers.insert(END, clientName)
+                        self.listboxUsers.insert(END, clientName )
             except:
                 pass
             finally:

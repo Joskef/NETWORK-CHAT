@@ -123,11 +123,10 @@ if __name__ == '__main__':
                     s.sendto(data[2:], pcMember)
 
             else:
-
-                print time.ctime(time.time()) + str(addr) + ": :" + str(data[2:])
+                print time.ctime(time.time()) + str(addr) + ": :" + str(data)
                 clientNames_string = pickle.dumps(clientNames)
                 for client in clients:
-                    s.sendto(data[2:], client)
+                    s.sendto(data, client)
 
         except:
             pass
